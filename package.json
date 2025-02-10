@@ -1,0 +1,8 @@
+{
+    "name": "dev.milthm.minity.xluatools",
+    "author": "Morizero",
+    "displayName": "Minity.XLuaTools",
+    "version": "1.0.0",
+    "unity": "2021.3",
+    "description": "xLua tools, a part of Minity."
+}
