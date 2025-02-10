@@ -12,11 +12,21 @@ namespace Minity.XLuaTools.Editor
     [CustomPropertyDrawer(typeof(LuaBehaviour.Injection))]
     public class LuaInjectionDrawer : PropertyDrawer
     {
-        private DropdownField typeField;
+        private PopupField<Component> componentField;
         private PropertyField nameField;
-        private HelpBox emptyName, invalidType;
+        private HelpBox emptyName, mismatchComponent;
 
-        private SerializedProperty nameProp, typeProp;
+        private SerializedProperty nameProp, componentProp;
+        
+        private string ComponentItemFormater(Component component)
+        {
+            if (!component)
+            {
+                return "GameObject";
+            }
+
+            return component.GetType().Name;
+        }
         
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
@@ -29,10 +39,10 @@ namespace Minity.XLuaTools.Editor
             };
             
             emptyName = new HelpBox("The injection name can not be empty.", HelpBoxMessageType.Error);
-            invalidType = new HelpBox("The injection type is invalid.", HelpBoxMessageType.Error);
+            mismatchComponent = new HelpBox("The injection component is not matched with the game object.", HelpBoxMessageType.Error);
             
             nameProp = property.FindPropertyRelative("Name");
-            typeProp = property.FindPropertyRelative("Type");
+            componentProp = property.FindPropertyRelative("Component");
             
             var container = new VisualElement
             {
@@ -52,14 +62,13 @@ namespace Minity.XLuaTools.Editor
             };
             container.Add(objField);
             
-            var obj = (GameObject)property.FindPropertyRelative("Object").objectReferenceValue;
             var components = new List<Component>();
+            var obj = (GameObject)property.FindPropertyRelative("Object").objectReferenceValue;
             if (obj)
             {
                 obj.GetComponents(components);
             }
-            var types = components.Select(x => x.GetType().Name).Distinct().ToList();
-            types.Insert(0, "GameObject");
+            components.Insert(0, null);
                 
             nameField = new PropertyField(nameProp, "")            
             {
@@ -68,22 +77,24 @@ namespace Minity.XLuaTools.Editor
                     width = new StyleLength(Length.Percent(30f))
                 }
             };
-            typeField = new DropdownField(types, 
-                Math.Max(0, types.FindIndex(x => x == typeProp.stringValue)))
+            
+            componentField = 
+                new PopupField<Component>(components, 0, 
+                    ComponentItemFormater, ComponentItemFormater)
             {
                 style =
                 {
                     width = new StyleLength(Length.Percent(40f))
-                }
+                },
+                value = (Component)componentProp.objectReferenceValue
             };
-            typeField.BindProperty(typeProp);
-            
+
             container.Add(nameField);
-            container.Add(typeField);
+            container.Add(componentField);
 
             if (!obj)
             {
-                typeField.visible = false;
+                componentField.visible = false;
             }
             
             objField.RegisterValueChangeCallback(OnObjectChanged);
@@ -93,17 +104,19 @@ namespace Minity.XLuaTools.Editor
                                                     ? DisplayStyle.Flex 
                                                     : DisplayStyle.None;
             });
-            typeField.RegisterValueChangedCallback(e =>
+            componentField.RegisterValueChangedCallback(e =>
             {
-                invalidType.style.display = !typeField.choices.Contains(e.newValue) 
+                mismatchComponent.style.display = !componentField.choices.Contains(e.newValue) 
                                                     ? DisplayStyle.Flex 
                                                     : DisplayStyle.None;
+                componentProp.objectReferenceValue = e.newValue;
+                componentProp.serializedObject.ApplyModifiedProperties();
             });
             
             outerContainer.Add(container);
             
             outerContainer.Add(emptyName);
-            outerContainer.Add(invalidType);
+            outerContainer.Add(mismatchComponent);
             
             return outerContainer;
         }
@@ -113,7 +126,7 @@ namespace Minity.XLuaTools.Editor
             emptyName.style.display = string.IsNullOrEmpty(nameProp.stringValue)
                                                 ? DisplayStyle.Flex 
                                                 : DisplayStyle.None;
-            invalidType.style.display = !typeField.choices.Contains(typeProp.stringValue) 
+            mismatchComponent.style.display = !componentField.choices.Contains((Component)componentProp.objectReferenceValue) 
                                                 ? DisplayStyle.Flex 
                                                 : DisplayStyle.None;
         }
@@ -124,16 +137,14 @@ namespace Minity.XLuaTools.Editor
             {
                 var components = new List<Component>();
                 ((GameObject)e.changedProperty.objectReferenceValue).GetComponents(components);
-         
-                var types = components.Select(x => x.GetType().Name).Distinct().ToList();
-                types.Insert(0, "GameObject");
-                typeField.choices = types;
+                components.Insert(0, null);
+                componentField.choices = components;
                 
-                typeField.visible = true;
+                componentField.visible = true;
             }
             else
             {
-                typeField.visible = false;
+                componentField.visible = false;
             }
             Check();
         }

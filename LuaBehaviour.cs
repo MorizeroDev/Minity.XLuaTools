@@ -13,8 +13,8 @@ namespace Minity.XLuaTools
         public class Injection
         {
             public string Name;
-            public string Type = "GameObject";
             public GameObject Object;
+            public Component Component;
         }
 
         [Flags]
@@ -72,13 +72,9 @@ namespace Minity.XLuaTools
                     continue;
                 }
 #endif
-                if (injection.Type != "GameObject")
+                if (injection.Component)
                 {
-                    var component = injection.Object.GetComponent(injection.Type);
-                    if (component)
-                    {
-                        ScriptScopeTable.Set(injection.Name, injection.Object.GetComponent(injection.Type));
-                    }
+                    ScriptScopeTable.Set(injection.Name, injection.Component);
                 }
                 else
                 {
@@ -107,6 +103,12 @@ namespace Minity.XLuaTools
             registeredEvents = events.ToArray();
         }
 
+        [LuaCallCSharp]
+        public LuaTable Get()
+        {
+            return ScriptScopeTable;
+        }
+        
         private void OnDestroy()
         {
             Code.ReloadEvent -= Reload;
