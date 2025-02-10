@@ -56,11 +56,29 @@ namespace Minity.XLuaTools
             ScriptScopeTable.Set("self", this);
             ScriptScopeTable.Set("Global", LuaEnvGuard.Environment.Global);
 
+#if UNITY_EDITOR
+            var injectionNames = new HashSet<string>();
+#endif
             foreach (var injection in Injections)
             {
+                if (string.IsNullOrEmpty(injection.Name) || !injection.Object)
+                {
+                    continue;
+                }
+#if UNITY_EDITOR
+                if (!injectionNames.Add(injection.Name))
+                {
+                    Debug.LogError($"Injection '{injection.Name}' is duplicated.");
+                    continue;
+                }
+#endif
                 if (injection.Type != "GameObject")
                 {
-                    ScriptScopeTable.Set(injection.Name, injection.Object.GetComponent(injection.Type));
+                    var component = injection.Object.GetComponent(injection.Type);
+                    if (component)
+                    {
+                        ScriptScopeTable.Set(injection.Name, injection.Object.GetComponent(injection.Type));
+                    }
                 }
                 else
                 {
@@ -97,8 +115,9 @@ namespace Minity.XLuaTools
         
         private void Reload()
         {
+#if UNITY_EDITOR
             Debug.Log($"Code '{Code.name}' has been updated and reloaded.");
-            
+#endif
             LuaEnvGuard.Environment.DoString(Code.Code, Code.name, ScriptScopeTable);
             foreach (var ev in registeredEvents)
             {

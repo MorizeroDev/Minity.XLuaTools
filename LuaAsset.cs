@@ -18,6 +18,7 @@ namespace Minity.XLuaTools
 
         private string _substitution;
         
+        [NonSerialized]
         private bool _isSubstitution = false;
 
         internal event Action ReloadEvent;
@@ -64,7 +65,10 @@ namespace Minity.XLuaTools
         public void ApplySubstitution()
         {
             _isSubstitution = true;
-            substitutions.Add(Guid, this);
+            if (!substitutions.TryAdd(Guid, this))
+            {
+                substitutions[Guid] = this;
+            }
             if (activeLuaAssets.TryGetValue(Guid, out var assetList))
             {
                 foreach (var asset in assetList)
