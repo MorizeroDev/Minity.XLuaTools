@@ -117,9 +117,6 @@ namespace Minity.XLuaTools
         
         private void Reload()
         {
-#if UNITY_EDITOR
-            Debug.Log($"Code '{Code.name}' has been updated and reloaded.");
-#endif
             LuaEnvGuard.Environment.DoString(Code.Code, Code.name, ScriptScopeTable);
             foreach (var ev in registeredEvents)
             {

@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 namespace Minity.XLuaTools
 {
     public class LuaAsset : ScriptableObject
@@ -16,6 +20,7 @@ namespace Minity.XLuaTools
         [SerializeField, HideInInspector]
         private string _code;
 
+        [NonSerialized]
         private string _substitution;
         
         [NonSerialized]
@@ -24,7 +29,7 @@ namespace Minity.XLuaTools
         internal event Action ReloadEvent;
         
         public string Code => string.IsNullOrEmpty(_substitution) ? _code : _substitution;
-
+        
         private void OnEnable()
         {
             if (string.IsNullOrEmpty(Guid))
@@ -59,6 +64,12 @@ namespace Minity.XLuaTools
 
         private void OnValidate()
         {
+#if UNITY_EDITOR
+            if (EditorApplication.isPlaying)
+            {
+                Debug.Log($"Code '{name}' has been updated and reloaded.");
+            }
+#endif
             ReloadEvent?.Invoke();
         }
 
