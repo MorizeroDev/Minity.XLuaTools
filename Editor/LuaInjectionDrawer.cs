@@ -1,5 +1,4 @@
-﻿#if UNITY_EDITOR
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -9,7 +8,7 @@ using UnityEngine.UIElements;
 
 namespace Minity.XLuaTools.Editor
 {
-    [CustomPropertyDrawer(typeof(LuaBehaviour.Injection))]
+    [CustomPropertyDrawer(typeof(LuaInjection))]
     public class LuaInjectionDrawer : PropertyDrawer
     {
         private PopupField<Component> componentField;
@@ -150,4 +149,3 @@ namespace Minity.XLuaTools.Editor
         }
     }
 }
-#endif

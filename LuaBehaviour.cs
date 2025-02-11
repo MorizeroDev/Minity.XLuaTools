@@ -9,14 +9,6 @@ namespace Minity.XLuaTools
 {
     public class LuaBehaviour : MonoBehaviour
     {
-        [Serializable]
-        public class Injection
-        {
-            public string Name;
-            public GameObject Object;
-            public Component Component;
-        }
-
         [Flags]
         public enum EventCullFlag
         {
@@ -37,7 +29,7 @@ namespace Minity.XLuaTools
         public LuaAsset Code;
         
         public EventCullFlag EventCulling = EventCullFlag.Basic | EventCullFlag.Updating;
-        public Injection[] Injections;
+        public LuaInjection[] Injections;
         
         internal LuaTable ScriptScopeTable;
 
